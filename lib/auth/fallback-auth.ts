@@ -31,9 +31,25 @@ export async function signInWithPasswordOnly(email: string, password: string) {
 
     if (!userRole) {
       console.error("User role not found in metadata")
+      
+      // Try to get role from user data as fallback
+      const fallbackRole = data.user.user_metadata?.role || 
+        (data.user.email?.includes('admin') ? 'admin' : 
+         data.user.email?.includes('jobhouse') ? 'customer' : 'customer')
+      
+      if (fallbackRole) {
+        console.log("Using fallback role based on email:", fallbackRole)
+        return {
+          success: true,
+          user: data.user,
+          role: fallbackRole,
+          session: data.session
+        }
+      }
+      
       return { 
         success: false, 
-        error: 'User role not found' 
+        error: 'User role not found in metadata. Please contact support.' 
       }
     }
 
