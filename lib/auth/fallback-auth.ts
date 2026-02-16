@@ -26,25 +26,21 @@ export async function signInWithPasswordOnly(email: string, password: string) {
       }
     }
 
-    // Step 2: Get user role from database
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .single()
+    // Step 2: Get user role from JWT metadata (no DB query needed)
+    const userRole = data.user.app_metadata?.role as string
 
-    if (profileError || !profile) {
-      console.error("Profile fetch error:", profileError)
+    if (!userRole) {
+      console.error("User role not found in metadata")
       return { 
         success: false, 
-        error: 'User profile not found' 
+        error: 'User role not found' 
       }
     }
 
     return {
       success: true,
       user: data.user,
-      role: profile.role,
+      role: userRole,
       session: data.session
     }
 
