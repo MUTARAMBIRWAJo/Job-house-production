@@ -41,7 +41,14 @@ export default function EventDetailPage() {
       const res = await fetch(`/api/events/${slug}`)
       
       if (!res.ok) {
-        throw new Error('Failed to fetch event')
+        const errorText = await res.text().catch(() => 'Unknown error')
+        console.error('[v0] Error fetching event:', {
+          status: res.status,
+          statusText: res.statusText,
+          error: errorText
+        })
+        setEvent(null)
+        return
       }
 
       const data = await res.json()

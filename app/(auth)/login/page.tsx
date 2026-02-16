@@ -166,6 +166,19 @@ function LoginPageContent() {
 
       if (verifyError) {
         console.error("OTP VERIFICATION ERROR:", verifyError)
+        
+        // Handle expired tokens gracefully
+        if (verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
+          setError('Verification code expired. Please try logging in again.')
+          // Reset to password form after a delay
+          setTimeout(() => {
+            setStep('password')
+            setOtp('')
+            setError('')
+          }, 3000)
+          return
+        }
+        
         setError(`Invalid verification code: ${verifyError.message}`)
         return
       }

@@ -45,7 +45,10 @@ export async function signInWithPasswordOnly(email: string, password: string) {
     }
 
   } catch (error) {
-    console.error("Fallback auth error:", error)
+    // Only log if there's actually an error
+    if (error) {
+      console.error("Fallback auth error:", error)
+    }
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Authentication failed' 
