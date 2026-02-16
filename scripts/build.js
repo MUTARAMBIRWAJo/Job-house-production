@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Custom build script that bypasses pnpm/corepack issues
+// Custom build script that bypasses corepack issues
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');

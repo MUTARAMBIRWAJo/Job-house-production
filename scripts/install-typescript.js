@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Simple script to install typescript using npm instead of pnpm
+// Simple script to install typescript using npm
 const { execSync } = require('child_process');
 
 console.log('Installing TypeScript using npm...');

@@ -47,7 +47,6 @@ try {
 } catch (error) {
   console.log('Cannot write pnpm.js - trying alternative approach');
 }
-`;
 
 // Create the mock pnpm.js file
 try {
