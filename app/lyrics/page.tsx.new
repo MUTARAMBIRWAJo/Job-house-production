@@ -1,0 +1,139 @@
+'use client'
+
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft, Filter } from 'lucide-react'
+import SongCard from '@/components/SongCard'
+import { Button } from '@/components/ui/button'
+import FilterControls from '@/components/FilterControls'
+import { Song } from '@/types'
+
+// Client-side data fetching
+async function getSongs(language?: string, sort: string = 'recent') {
+  const params = new URLSearchParams()
+  if (language && language !== '') {
+    params.append('language', language)
+  }
+  params.append('sort', sort)
+  
+  try {
+    const response = await fetch(`/api/songs?${params.toString()}`)
+    if (!response.ok) {
+      throw new Error('Failed to fetch songs')
+    }
+    const data = await response.json()
+    return data.songs || []
+  } catch (error) {
+    console.error('Error fetching songs:', error)
+    return []
+  }
+}
+
+export default function LyricsPage() {
+  const [songs, setSongs] = useState<EnhancedSong[]>([])
+  const [loading, setLoading] = useState(true)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
+  const language = searchParams.get('language') || ''
+  const sort = searchParams.get('sort') || 'recent'
+  
+  useEffect(() => {
+    const fetchSongs = async () => {
+      setLoading(true)
+      const fetchedSongs = await getSongs(language, sort)
+      setSongs(fetchedSongs)
+      setLoading(false)
+    }
+    
+    fetchSongs()
+  }, [language, sort])
+
+  const handleLanguageChange = (newLanguage: string) => {
+    const params = new URLSearchParams(searchParams)
+    if (newLanguage) {
+      params.set('language', newLanguage)
+    } else {
+      params.delete('language')
+    }
+    params.set('sort', sort)
+    router.push(`/lyrics?${params.toString()}`)
+  }
+
+  const handleSortChange = (newSort: string) => {
+    const params = new URLSearchParams(searchParams)
+    if (language) {
+      params.set('language', language)
+    } else {
+      params.delete('language')
+    }
+    params.set('sort', newSort)
+    router.push(`/lyrics?${params.toString()}`)
+  }
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="bg-primary text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link href="/">
+            <Button variant="outline" className="mb-6 border-white text-white hover:bg-white/10">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+          <h1 className="text-4xl font-bold mb-2">Gospel Lyrics</h1>
+          <p className="text-gray-200">Browse and discover authentic gospel music lyrics</p>
+        </div>
+      </div>
+      {/* Filters & Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Filters Sidebar */}
+          <aside className="lg:col-span-1">
+            <div className="sticky top-24 space-y-6">
+              <div className="bg-card rounded-lg p-6 border border-border">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </h3>
+                <FilterControls
+                  language={language}
+                  sort={sort}
+                  onLanguageChange={handleLanguageChange}
+                  onSortChange={handleSortChange}
+                />
+              </div>
+            </div>
+          </aside>
+          {/* Songs Grid */}
+          <div className="lg:col-span-3">
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="text-muted-foreground mt-4">Loading songs...</p>
+              </div>
+            ) : songs.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 text-muted-foreground">
+                  <Filter className="w-full h-full" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">No songs found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your filters or check back later for new additions.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {songs.map((song: EnhancedSong) => (
+                  <SongCard key={song.id} song={song} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

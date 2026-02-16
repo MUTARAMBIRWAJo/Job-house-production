@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: https://jobhouseproduction.com/sitemap.xml
+
+# Google-specific directives
+User-agent: Googlebot
+Allow: /
+
+# Crawl delay
+Crawl-delay: 1
