@@ -125,20 +125,8 @@ export async function proxy(request: NextRequest) {
             return NextResponse.redirect(redirectUrl)
      }
 
-     // Handle authenticated users trying to access auth routes
-     if (isAuthRoute && user) {
-            // Check if OTP verification is pending (optional enhancement)
-            // Otherwise redirect to appropriate dashboard
-            if (userRole === 'admin') {
-                  return NextResponse.redirect(new URL('/admin', request.url))
-            } else if (userRole === 'editor') {
-                  return NextResponse.redirect(new URL('/editor', request.url))
-            } else if (userRole === 'artist') {
-                  return NextResponse.redirect(new URL('/artist/dashboard', request.url))
-            } else {
-                  return NextResponse.redirect(new URL('/dashboard', request.url))
-            }
-     }
+     // Allow authenticated users to access auth routes (don't redirect away from login)
+     // This allows users to manually navigate to login page even when authenticated
 
      // Role-based access control
      // Admin routes - admin only
