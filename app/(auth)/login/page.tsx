@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
+import { signInWithPasswordOnly, testEmailProvider } from '@/lib/auth/fallback-auth'
 
 function LoginPageContent() {
   const router = useRouter()
@@ -25,8 +26,9 @@ function LoginPageContent() {
   // UI states
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState<'password' | 'otp'>('password')
+  const [step, setStep] = useState<'password' | 'otp' | 'fallback'>('password')
   const [resendCooldown, setResendCooldown] = useState(0)
+  const [useFallback, setUseFallback] = useState(false)
   
   const supabase = createClient()
 
@@ -76,8 +78,52 @@ function LoginPageContent() {
 
       if (otpError) {
         console.error("OTP ERROR:", otpError)
-        setError(`Failed to send verification code: ${otpError.message}`)
-        return
+        
+        // Check if it's an email provider issue
+        if (otpError.message.includes('sending confirmation email') || 
+            otpError.message.includes('Error sending magic link')) {
+          
+          // Try fallback authentication
+          console.log("Email provider failed, trying fallback authentication...")
+          const fallbackResult = await signInWithPasswordOnly(email, password)
+          
+          if (fallbackResult.success) {
+            // Fallback successful - redirect to dashboard
+            const userRole = fallbackResult.role
+            
+            let redirectUrl = '/dashboard' // default
+            
+            switch (userRole) {
+              case 'admin':
+                redirectUrl = '/admin'
+                break
+              case 'artist':
+                redirectUrl = '/artist/dashboard'
+                break
+              case 'editor':
+                redirectUrl = '/editor'
+                break
+              default:
+                redirectUrl = '/dashboard'
+            }
+
+            // Apply redirect parameter if provided
+            if (redirectParam) {
+              redirectUrl = redirectParam
+            }
+
+            router.push(redirectUrl)
+            router.refresh()
+            return
+          } else {
+            // Fallback also failed
+            setError(`Email service unavailable and login failed: ${fallbackResult.error}`)
+            return
+          }
+        } else {
+          setError(`Failed to send verification code: ${otpError.message}`)
+          return
+        }
       }
 
       // Step 4: Show OTP input UI
@@ -304,7 +350,74 @@ function LoginPageContent() {
                 ) : (
                   <>
                     <LogIn className="w-4 h-4 mr-2" />
-                    Sign In
+                    Sign In with 2FA
+                  </>
+                )}
+              </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or
+                  </span>
+                </div>
+              </div>
+
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={async () => {
+                  setLoading(true)
+                  setError('')
+                  
+                  const fallbackResult = await signInWithPasswordOnly(email, password)
+                  
+                  if (fallbackResult.success) {
+                    const userRole = fallbackResult.role
+                    
+                    let redirectUrl = '/dashboard' // default
+                    
+                    switch (userRole) {
+                      case 'admin':
+                        redirectUrl = '/admin'
+                        break
+                      case 'artist':
+                        redirectUrl = '/artist/dashboard'
+                        break
+                      case 'editor':
+                        redirectUrl = '/editor'
+                        break
+                      default:
+                        redirectUrl = '/dashboard'
+                    }
+
+                    if (redirectParam) {
+                      redirectUrl = redirectParam
+                    }
+
+                    router.push(redirectUrl)
+                    router.refresh()
+                  } else {
+                    setError(`Login failed: ${fallbackResult.error}`)
+                  }
+                  
+                  setLoading(false)
+                }}
+                disabled={loading || !email || !password}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In (Password Only)
                   </>
                 )}
               </Button>
