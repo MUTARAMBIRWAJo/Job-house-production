@@ -12,7 +12,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }, [])
 
       if (!mounted) {
-            return <>{children}</>
+            // Return null during hydration to prevent mismatch
+            return null
       }
 
       return (

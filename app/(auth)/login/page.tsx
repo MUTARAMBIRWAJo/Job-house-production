@@ -69,10 +69,14 @@ function LoginPageContent() {
       // Step 3: Send OTP after successful password validation
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`
+        }
       })
 
       if (otpError) {
-        setError('Failed to send verification code')
+        console.error("OTP ERROR:", otpError)
+        setError(`Failed to send verification code: ${otpError.message}`)
         return
       }
 
@@ -82,7 +86,9 @@ function LoginPageContent() {
       setError('')
       
     } catch (err) {
-      setError('An unexpected error occurred')
+      console.error("LOGIN ERROR:", err)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(`Login failed: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
@@ -108,7 +114,8 @@ function LoginPageContent() {
       })
 
       if (verifyError) {
-        setError('Invalid verification code')
+        console.error("OTP VERIFICATION ERROR:", verifyError)
+        setError(`Invalid verification code: ${verifyError.message}`)
         return
       }
 
@@ -170,18 +177,24 @@ function LoginPageContent() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`
+        }
       })
 
       if (error) {
-        setError('Failed to resend verification code')
+        console.error("RESEND OTP ERROR:", error)
+        setError(`Failed to resend verification code: ${error.message}`)
         return
       }
 
       setResendCooldown(60)
-      setError('Verification code resent')
+      setError('Verification code resent successfully')
       
     } catch (err) {
-      setError('Failed to resend verification code')
+      console.error("RESEND OTP ERROR:", err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resend verification code'
+      setError(`Resend failed: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
