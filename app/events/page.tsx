@@ -22,28 +22,35 @@ const CITIES = ['All', 'Kigali', 'Musanze', 'Rubavu', 'Butare', 'Gitarama']
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedType, setSelectedType] = useState<EventType | ''>('')
+  const [selectedType, setSelectedType] = useState<string>('')
   const [selectedCity, setSelectedCity] = useState('')
   const [showUpcoming, setShowUpcoming] = useState(true)
   const [showNeedsCoverage, setShowNeedsCoverage] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(true)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  const filteredEvents = events.filter((event: Event) =>
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.venue.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   useEffect(() => {
     fetchEvents(0)
   }, [selectedType, selectedCity, showUpcoming, showNeedsCoverage])
 
-  const fetchEvents = async (newOffset: number) => {
+  const fetchEvents = async (newOffset: number, limit: number = 24) => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
-        limit: '12',
+        limit: limit.toString(),
         offset: newOffset.toString(),
       })
 
-      if (selectedType) params.append('type', selectedType)
-      if (selectedCity && selectedCity !== 'All') params.append('city', selectedCity)
+      if (selectedType && selectedType !== 'all') params.append('type', selectedType)
+      if (selectedCity && selectedCity !== 'all') params.append('city', selectedCity)
       if (showUpcoming) params.append('upcoming', 'true')
       if (showNeedsCoverage) params.append('needs_coverage', 'true')
 
@@ -56,7 +63,7 @@ export default function EventsPage() {
         } else {
           setEvents((prev) => [...prev, ...(data.data || [])])
         }
-        setHasMore((data.data || []).length === 12)
+        setHasMore((data.data || []).length === limit)
       } else {
         console.error('Events API error:', res.status, res.statusText)
       }
@@ -68,16 +75,39 @@ export default function EventsPage() {
   }
 
   const loadMore = () => {
-    const newOffset = offset + 12
+    const newOffset = offset + 24
     setOffset(newOffset)
     fetchEvents(newOffset)
   }
 
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.venue.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const loadAll = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({
+        limit: '1000', // Load a large number to get all events
+        offset: '0',
+      })
+
+      if (selectedType && selectedType !== 'all') params.append('type', selectedType)
+      if (selectedCity && selectedCity !== 'all') params.append('city', selectedCity)
+      if (showUpcoming) params.append('upcoming', 'true')
+      if (showNeedsCoverage) params.append('needs_coverage', 'true')
+
+      const res = await fetch(`/api/events?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        console.log('Load all events response:', data)
+        setEvents(data.data || [])
+        setHasMore(false)
+      } else {
+        console.error('Load all events error:', res.status, res.statusText)
+      }
+    } catch (error) {
+      console.error('Error loading all events:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getEventTypeIcon = (type: EventType) => {
     switch (type) {
@@ -149,12 +179,12 @@ export default function EventsPage() {
                 className="lg:col-span-2"
               />
               
-              <Select value={selectedType} onValueChange={(value) => setSelectedType(value as EventType | '')}>
+              <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Event Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   {EVENT_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
@@ -168,8 +198,9 @@ export default function EventsPage() {
                   <SelectValue placeholder="City" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CITIES.map((city) => (
-                    <SelectItem key={city} value={city === 'All' ? '' : city}>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  {CITIES.filter(city => city !== 'All').map((city) => (
+                    <SelectItem key={city} value={city}>
                       {city}
                     </SelectItem>
                   ))}
@@ -232,6 +263,7 @@ export default function EventsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map((event) => {
                 const EventTypeIcon = getEventTypeIcon(event.event_type)
+                const eventTypeColor = getEventTypeColor(event.event_type)
                 const isPast = isEventPast(event.event_date)
                 
                 return (
@@ -258,9 +290,7 @@ export default function EventsPage() {
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <Badge className={getEventTypeColor(event.event_type)} mb-2>
-                            {event.event_type}
-                          </Badge>
+                          <Badge className={`${eventTypeColor} mb-2`}>{event.event_type}</Badge>
                           <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
                         </div>
                         {event.is_featured && (
@@ -325,10 +355,18 @@ export default function EventsPage() {
             </div>
 
             {hasMore && (
-              <div className="text-center mt-12">
-                <Button onClick={loadMore} variant="outline" size="lg">
-                  Load More Events
-                </Button>
+              <div className="text-center mt-12 space-y-4">
+                <div className="flex justify-center gap-4">
+                  <Button onClick={loadMore} variant="outline" size="lg">
+                    Load More Events
+                  </Button>
+                  <Button onClick={loadAll} variant="default" size="lg" className="bg-primary hover:bg-primary/90">
+                    Load All Events
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Showing {events.length} of {events.length + (hasMore ? 'more' : 'all')} events
+                </p>
               </div>
             )}
           </>

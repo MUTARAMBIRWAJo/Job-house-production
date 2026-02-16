@@ -36,14 +36,7 @@ async function getArtists(genre?: string, verifiedOnly: boolean = false, search?
   
   let query = supabase
     .from('artists')
-    .select(`
-      *,
-      songs:artists (
-        id,
-        title,
-        created_at
-      )
-    `)
+    .select('*')
 
   // Apply filters
   if (genre && genre !== '') {
@@ -74,8 +67,10 @@ async function getArtists(genre?: string, verifiedOnly: boolean = false, search?
     avatar_url: artist.avatar_url,
     verified_status: artist.verified_status,
     genres: artist.genres,
-    songs_count: artist.songs?.length || 0,
-    latest_song_date: artist.songs?.[0]?.created_at
+    songs_count: artist.songs_count || 0,
+    followers: artist.followers || 0,
+    created_at: artist.created_at,
+    updated_at: artist.updated_at
   })) || []
 }
 

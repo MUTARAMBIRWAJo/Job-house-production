@@ -79,9 +79,15 @@ function LoginPageContent() {
       if (otpError) {
         console.error("OTP ERROR:", otpError)
         
-        // Check if it's an email provider issue
-        if (otpError.message.includes('sending confirmation email') || 
-            otpError.message.includes('Error sending magic link')) {
+        // Check if it's an email provider issue - expanded check
+        const isEmailProviderError = 
+          otpError.message.includes('sending confirmation email') || 
+          otpError.message.includes('Error sending magic link') ||
+          otpError.message.includes('Error sending magic link email') ||
+          otpError.message.includes('unexpected_failure') ||
+          otpError.status === 500
+          
+        if (isEmailProviderError) {
           
           // Try fallback authentication
           console.log("Email provider failed, trying fallback authentication...")
@@ -117,12 +123,11 @@ function LoginPageContent() {
             return
           } else {
             // Fallback also failed
-            setError(`Email service unavailable and login failed: ${fallbackResult.error}`)
-            return
+            setError(`Login failed: ${fallbackResult.error}`)
           }
         } else {
-          setError(`Failed to send verification code: ${otpError.message}`)
-          return
+          // Other OTP error
+          setError(`OTP error: ${otpError.message}`)
         }
       }
 
