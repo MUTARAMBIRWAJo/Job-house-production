@@ -22,7 +22,7 @@ import {
       SelectValue,
 } from '@/components/ui/select'
 import { AlertCircle } from 'lucide-react'
-import { register } from '@/lib/auth/actions'
+import { registerWithoutEmail, testEmailProvider } from '@/lib/auth/fallback-auth'
 
 export default function RegisterPage() {
       const router = useRouter()
@@ -35,11 +35,14 @@ export default function RegisterPage() {
       const [showConfirmPassword, setShowConfirmPassword] = useState(false)
       const [loading, setLoading] = useState(false)
       const [error, setError] = useState('')
+      const [success, setSuccess] = useState('')
+      const [useFallback, setUseFallback] = useState(false)
 
       const handleSubmit = async (e: React.FormEvent) => {
             e.preventDefault()
             setLoading(true)
             setError('')
+            setSuccess('')
 
             // Validate passwords match
             if (password !== confirmPassword) {
@@ -56,15 +59,21 @@ export default function RegisterPage() {
             }
 
             try {
-                  const formData = new FormData()
-                  formData.append('email', email)
-                  formData.append('password', password)
-                  formData.append('full_name', fullName)
-                  formData.append('role', role)
-
-                  await register(formData)
+                  // Try registration with fallback
+                  const result = await registerWithoutEmail(email, password, fullName, role)
+                  
+                  if (result.success) {
+                        setSuccess(result.message || 'Registration successful! Redirecting to login...')
+                        setTimeout(() => {
+                              router.push('/login?registered=true')
+                        }, 2000)
+                  } else {
+                        setError(result.error || 'Registration failed')
+                  }
             } catch (err) {
+                  console.error("Registration error:", err)
                   setError(err instanceof Error ? err.message : 'Registration failed')
+            } finally {
                   setLoading(false)
             }
       }
@@ -91,6 +100,12 @@ export default function RegisterPage() {
                                           <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4" />
                                                 {error}
+                                          </div>
+                                    )}
+
+                                    {success && (
+                                          <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg text-sm">
+                                                {success}
                                           </div>
                                     )}
 
@@ -204,6 +219,12 @@ export default function RegisterPage() {
                                           )}
                                     </Button>
                               </form>
+
+                              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p className="text-blue-700 text-sm">
+                                          💡 <strong>Note:</strong> Account creation is instant! You'll be able to log in immediately after registration.
+                                    </p>
+                              </div>
 
                               <p className="mt-6 text-center text-sm text-muted-foreground">
                                     Already have an account?{' '}

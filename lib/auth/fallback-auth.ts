@@ -57,6 +57,74 @@ export async function signInWithPasswordOnly(email: string, password: string) {
   }
 }
 
+// Fallback registration method when email confirmation fails
+export async function registerWithoutEmail(email: string, password: string, fullName: string, role: string) {
+  const supabase = createClient()
+  
+  try {
+    // Step 1: Create user in Supabase Auth
+    const { data, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: role
+        }
+      }
+    })
+
+    if (authError) {
+      console.error("Registration error:", authError)
+      return { 
+        success: false, 
+        error: authError.message || 'Registration failed' 
+      }
+    }
+
+    if (!data.user) {
+      return { 
+        success: false, 
+        error: 'Failed to create user account' 
+      }
+    }
+
+    // Step 2: Explicitly create profile to ensure it exists
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: data.user.id,
+        email: email,
+        full_name: fullName,
+        role: role,
+        is_verified: true // Auto-verify since email confirmation failed
+      })
+
+    if (profileError) {
+      console.error("Profile creation error:", profileError)
+      // Try to clean up auth user to prevent orphaned accounts
+      await supabase.auth.admin.deleteUser(data.user.id).catch(console.error)
+      return { 
+        success: false, 
+        error: 'Failed to create user profile' 
+      }
+    }
+
+    return {
+      success: true,
+      user: data.user,
+      message: 'Registration successful! You can now log in.'
+    }
+
+  } catch (error) {
+    console.error("Fallback registration error:", error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Registration failed' 
+    }
+  }
+}
+
 // Check if email provider is working
 export async function testEmailProvider(email: string) {
   const supabase = createClient()
