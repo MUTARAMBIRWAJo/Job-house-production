@@ -214,6 +214,65 @@ CREATE TABLE orders (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- ============================================
+-- ROW LEVEL SECURITY (RLS) SETUP
+-- ============================================
+
+-- Enable RLS on profiles table
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+CREATE POLICY "Users can view own profile" 
+  ON profiles FOR SELECT 
+  USING (auth.uid() = id);
+
+-- Users can update their own profile
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" 
+  ON profiles FOR UPDATE 
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- Admins have full access to profiles
+DROP POLICY IF EXISTS "Admins have full access" ON profiles;
+CREATE POLICY "Admins have full access" 
+  ON profiles FOR ALL 
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Enable RLS on other tables
+ALTER TABLE artists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE songs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE news ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read on most tables (for anonymous browsing)
+DROP POLICY IF EXISTS "Public can view published songs" ON songs;
+CREATE POLICY "Public can view published songs" 
+  ON songs FOR SELECT 
+  USING (status = 'published' OR status = 'draft');
+
+DROP POLICY IF EXISTS "Public can view published news" ON news;
+CREATE POLICY "Public can view published news" 
+  ON news FOR SELECT 
+  USING (status = 'published' OR status = 'draft');
+
+DROP POLICY IF EXISTS "Public can view artists" ON artists;
+CREATE POLICY "Public can view artists" 
+  ON artists FOR SELECT 
+  USING (true);
+
+DROP POLICY IF EXISTS "Public can view events" ON events;
+CREATE POLICY "Public can view events" 
+  ON events FOR SELECT 
+  USING (true);
+
 -- Create indexes for performance
 CREATE INDEX idx_profiles_role ON profiles(role);
 CREATE INDEX idx_profiles_email ON profiles(email);

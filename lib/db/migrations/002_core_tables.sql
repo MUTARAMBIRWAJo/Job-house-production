@@ -138,7 +138,7 @@ ALTER TABLE public.downloads ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can view verified artists" ON public.artists;
 CREATE POLICY "Anyone can view verified artists" 
   ON public.artists FOR SELECT 
-  USING (is_verified = true OR is_verified IS NULL);
+  USING (verified = true OR verified IS NULL);
 
 DROP POLICY IF EXISTS "Artists can update own profile" ON public.artists;
 CREATE POLICY "Artists can update own profile" 
@@ -224,7 +224,7 @@ CREATE POLICY "Anyone can create downloads"
 -- INDEXES FOR PERFORMANCE
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_artists_slug ON public.artists(slug);
-CREATE INDEX IF NOT EXISTS idx_artists_is_verified ON public.artists(is_verified);
+CREATE INDEX IF NOT EXISTS idx_artists_verified ON public.artists(verified);
 CREATE INDEX IF NOT EXISTS idx_artists_is_featured ON public.artists(is_featured);
 
 CREATE INDEX IF NOT EXISTS idx_songs_artist_id ON public.songs(artist_id);

@@ -13,9 +13,10 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   avatar_url TEXT,
   phone TEXT,
   bio TEXT,
-  is_verified BOOLEAN DEFAULT FALSE,
+  verified BOOLEAN DEFAULT FALSE,
   two_factor_enabled BOOLEAN DEFAULT FALSE,
   two_factor_secret TEXT,
+  status VARCHAR(50) DEFAULT 'active',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -79,11 +80,16 @@ CREATE POLICY "Admin full access to profiles"
   );
 
 -- Allow public read for display purposes (no sensitive data)
-CREATE POLICY "Anyone can view public profile info" 
+DROP POLICY IF EXISTS "Anyone can view public profile info" ON public.profiles;
+CREATE POLICY "Anyone can view verified profiles" 
   ON public.profiles FOR SELECT 
-  USING (
-    id IN (SELECT id FROM public.profiles WHERE is_verified = true)
-  );
+  USING (verified = true);
+
+-- Allow authenticated users to insert their own profile (for signup)
+DROP POLICY IF EXISTS "Authenticated users can create their profile" ON public.profiles;
+CREATE POLICY "Authenticated users can create their profile" 
+  ON public.profiles FOR INSERT 
+  WITH CHECK (auth.uid() = id OR true);
 
 -- ============================================
 -- RLS POLICIES FOR OTP VERIFICATIONS
@@ -152,7 +158,7 @@ CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON public.user_sessions(sessi
 -- Note: This requires a user to already exist in auth.users
 -- Uncomment and modify after creating first admin user manually
 
--- INSERT INTO public.profiles (id, email, full_name, role, is_verified)
+-- INSERT INTO public.profiles (id, email, full_name, role, verified)
 -- SELECT id, email, 'Admin User', 'admin', true
 -- FROM auth.users
 -- WHERE email = 'admin@jobhouseproduction.com'

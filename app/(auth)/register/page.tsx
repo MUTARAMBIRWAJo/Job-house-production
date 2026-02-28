@@ -22,8 +22,6 @@ import {
       SelectValue,
 } from '@/components/ui/select'
 import { AlertCircle } from 'lucide-react'
-import { registerWithoutEmail, testEmailProvider } from '@/lib/auth/fallback-auth'
-
 export default function RegisterPage() {
       const router = useRouter()
       const [fullName, setFullName] = useState('')
@@ -59,16 +57,27 @@ export default function RegisterPage() {
             }
 
             try {
-                  // Try registration with fallback
-                  const result = await registerWithoutEmail(email, password, fullName, role)
-                  
-                  if (result.success) {
-                        setSuccess(result.message || 'Registration successful! Redirecting to login...')
+                  // Call server-side signup API
+                  const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                              email,
+                              password,
+                              full_name: fullName,
+                              role
+                        })
+                  })
+
+                  const data = await response.json()
+
+                  if (response.ok && data.success) {
+                        setSuccess(data.message || 'Registration successful! Redirecting to login...')
                         setTimeout(() => {
                               router.push('/login?registered=true')
                         }, 2000)
                   } else {
-                        setError(result.error || 'Registration failed')
+                        setError(data.error || 'Registration failed')
                   }
             } catch (err) {
                   console.error("Registration error:", err)
