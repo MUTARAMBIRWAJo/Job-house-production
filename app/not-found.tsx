@@ -34,8 +34,8 @@ export default function NotFound() {
         <div className="pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground mb-4">Quick Links:</p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/lyrics" className="text-sm text-secondary hover:underline">
-              Lyrics
+            <Link href="/songs" className="text-sm text-secondary hover:underline">
+              Songs
             </Link>
             <Link href="/artists" className="text-sm text-secondary hover:underline">
               Artists

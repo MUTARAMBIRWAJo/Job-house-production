@@ -20,10 +20,11 @@ async function getSongs(language?: string, sort: string = 'recent') {
         id,
         name,
         slug,
-        avatar_url,
+        image_url,
         verified_status
       )
     `)
+    .eq('status', 'published')
 
   // Apply language filter
   if (language && language !== '' && language !== 'all') {

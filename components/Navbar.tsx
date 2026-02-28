@@ -16,14 +16,12 @@ export default function Navbar() {
 
   const navItems = [
     { label: 'Home', href: '/' },
-    { label: 'Lyrics', href: '/lyrics' },
+    { label: 'Songs', href: '/songs' },
     { label: 'Artists', href: '/artists' },
-    { label: 'Events', href: '/events' },
-
+    { label: 'Events', href: '/events-ssr' },
     { label: 'News', href: '/news' },
-    { label: 'Store', href: '/store' },
+    { label: 'Store', href: '/products' },
     { label: 'Studio', href: '/studio' },
-
   ];
 
   return (

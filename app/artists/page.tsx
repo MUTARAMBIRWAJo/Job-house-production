@@ -7,27 +7,17 @@ import { createPublicClient } from '@/lib/supabase/public'
 
 const GENRES = ['Gospel', 'Contemporary Gospel', 'Traditional Gospel', 'Reggae', 'Soul', 'Pop']
 
-// Enhanced Artist interface with joins (matches ArtistCard expectations)
+// Artist interface
 interface EnhancedArtist {
   id: string
   name: string
   slug: string
-  bio: string
-  avatar_url: string | null
-  verified_status: boolean | null
-  genres: string[] | null
-  email: string | null
-  social_links: any
-  founded_year: number | null
-  songs_count: number | null
-  followers: number | null
+  bio?: string
+  image_url?: string | null
+  verified_status?: string | null
+  genres?: string[] | null
   created_at: string
   updated_at: string
-  // Enhanced fields from joins
-  genre_names?: string[]
-  genre_count?: number
-  latest_song_title?: string
-  latest_song_date?: string
 }
 
 // Server-side data fetching - PUBLIC ACCESS (No authentication required)
@@ -64,11 +54,9 @@ async function getArtists(genre?: string, verifiedOnly: boolean = false, search?
     name: artist.name,
     slug: artist.slug,
     bio: artist.bio,
-    avatar_url: artist.avatar_url,
+    image_url: artist.image_url,
     verified_status: artist.verified_status,
     genres: artist.genres,
-    songs_count: artist.songs_count || 0,
-    followers: artist.followers || 0,
     created_at: artist.created_at,
     updated_at: artist.updated_at
   })) || []

@@ -227,12 +227,12 @@ export default async function HomePage() {
               </form>
 
               <div className="flex gap-4 pt-4">
-                <Link href="/lyrics">
+                <Link href="/songs">
                   <Button
                     variant="outline"
                     className="border-white text-white hover:bg-white/10"
                   >
-                    Explore Lyrics
+                    Explore Songs
                   </Button>
                 </Link>
                 <Link href="/artists">
@@ -263,7 +263,7 @@ export default async function HomePage() {
               <h2 className="text-4xl font-bold text-foreground mb-2">Latest Songs</h2>
               <p className="text-muted-foreground">Newest gospel songs added recently</p>
             </div>
-            <Link href="/lyrics">
+            <Link href="/songs">
               <Button variant="outline">View All</Button>
             </Link>
           </div>

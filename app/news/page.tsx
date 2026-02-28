@@ -65,22 +65,17 @@ export default async function NewsPage({
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-wrap gap-2 justify-center">
           {categories.map((cat) => (
-            <Button
+            <Link
               key={cat}
-              variant={category === cat ? 'default' : 'outline'}
-              onClick={() => {
-                const params = new URLSearchParams(searchParams?.toString())
-                if (cat === 'All') {
-                  params.delete('category')
-                } else {
-                  params.set('category', cat)
-                }
-                window.location.href = `/news?${params.toString()}`
-              }}
-              className="rounded-full"
+              href={cat === 'All' ? '/news' : `/news?category=${encodeURIComponent(cat)}`}
             >
-              {cat}
-            </Button>
+              <Button
+                variant={category === cat || (cat === 'All' && !category) ? 'default' : 'outline'}
+                className="rounded-full"
+              >
+                {cat}
+              </Button>
+            </Link>
           ))}
         </div>
       </section>
