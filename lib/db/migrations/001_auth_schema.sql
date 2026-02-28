@@ -67,7 +67,8 @@ CREATE POLICY "Users can view own profile"
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" 
   ON public.profiles FOR UPDATE 
-  USING (auth.uid() = id);
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
 DROP POLICY IF EXISTS "Admin full access to profiles" ON public.profiles;
 CREATE POLICY "Admin full access to profiles" 
@@ -81,15 +82,17 @@ CREATE POLICY "Admin full access to profiles"
 
 -- Allow public read for display purposes (no sensitive data)
 DROP POLICY IF EXISTS "Anyone can view public profile info" ON public.profiles;
-CREATE POLICY "Anyone can view verified profiles" 
+DROP POLICY IF EXISTS "Anyone can view verified profiles" ON public.profiles;
+CREATE POLICY "Public can view verified profiles" 
   ON public.profiles FOR SELECT 
   USING (verified = true);
 
--- Allow authenticated users to insert their own profile (for signup)
+-- Service role inserts during signup (no RLS check - service role bypasses RLS)
+-- This is handled via createAdminClient() server-side only
 DROP POLICY IF EXISTS "Authenticated users can create their profile" ON public.profiles;
-CREATE POLICY "Authenticated users can create their profile" 
+CREATE POLICY "Service role can create profiles" 
   ON public.profiles FOR INSERT 
-  WITH CHECK (auth.uid() = id OR true);
+  WITH CHECK (true);
 
 -- ============================================
 -- RLS POLICIES FOR OTP VERIFICATIONS

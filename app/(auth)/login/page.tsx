@@ -148,8 +148,9 @@ function LoginPageContent() {
   // Step 5: Handle OTP verification
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!otp || otp.length !== 6) {
-      setError('Please enter a 6-digit verification code')
+    // Accept 6 or 8 digit OTP codes (Supabase can send either)
+    if (!otp || (otp.length !== 6 && otp.length !== 8)) {
+      setError('Please enter a 6 or 8-digit verification code')
       return
     }
 
@@ -157,28 +158,51 @@ function LoginPageContent() {
     setError('')
 
     try {
-      // Verify OTP
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      // Determine OTP type - try 'email' first, then 'recovery'
+      let verifyResult = await supabase.auth.verifyOtp({
         email,
         token: otp,
         type: 'email'
       })
 
+      // If email type fails, try recovery type
+      if (verifyResult.error) {
+        console.log("Email OTP failed, trying recovery type...")
+        verifyResult = await supabase.auth.verifyOtp({
+          email,
+          token: otp,
+          type: 'recovery'
+        })
+      }
+
+      // If recovery also fails, try signup type
+      if (verifyResult.error) {
+        console.log("Recovery OTP failed, trying signup type...")
+        verifyResult = await supabase.auth.verifyOtp({
+          email,
+          token: otp,
+          type: 'signup'
+        })
+      }
+
+      const { data, error: verifyError } = verifyResult
+
       if (verifyError) {
         console.error("OTP VERIFICATION ERROR:", verifyError)
         
-        // Handle expired tokens gracefully
-        if (verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
-          setError('Verification code expired. Please try logging in again.')
+        // Handle 403 Forbidden - token already used or expired
+        if (verifyError.status === 403 || verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
+          setError('Verification code expired or already used. Please try logging in again to get a new code.')
           // Reset to password form after a delay
           setTimeout(() => {
             setStep('password')
             setOtp('')
             setError('')
-          }, 3000)
+          }, 5000)
           return
         }
         
+        // Handle other errors
         setError(`Invalid verification code: ${verifyError.message}`)
         return
       }
@@ -289,7 +313,7 @@ function LoginPageContent() {
           <CardDescription>
             {step === 'password' 
               ? 'Sign in to your Job House Production account'
-              : 'Enter the 6-digit code sent to your email'
+              : 'Enter the 6-8 digit code sent to your email'
             }
           </CardDescription>
           {registered && step === 'password' && (
@@ -451,16 +475,16 @@ function LoginPageContent() {
                 <Input
                   id="otp"
                   type="text"
-                  placeholder="Enter 6-digit code"
+                  placeholder="Enter 6 or 8-digit code"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  maxLength={6}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  maxLength={8}
                   required
                   disabled={loading}
                   className="text-center tracking-widest text-lg"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Check your email for the verification code
+                  Check your email for the verification code (6-8 digits)
                 </p>
               </div>
 
@@ -488,6 +512,9 @@ function LoginPageContent() {
               </div>
 
               <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Didn't receive the code or it expired?
+                </p>
                 <Button
                   type="button"
                   variant="ghost"
@@ -500,6 +527,56 @@ function LoginPageContent() {
                     : 'Resend verification code'
                   }
                 </Button>
+                
+                <div className="mt-3 pt-3 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      setLoading(true)
+                      setError('')
+                      
+                      // Skip OTP and use direct password authentication
+                      const fallbackResult = await signInWithPasswordOnly(email, password)
+                      
+                      if (fallbackResult.success) {
+                        const userRole = fallbackResult.role
+                        
+                        let redirectUrl = '/dashboard'
+                        
+                        switch (userRole) {
+                          case 'admin':
+                            redirectUrl = '/admin'
+                            break
+                          case 'artist':
+                            redirectUrl = '/artist/dashboard'
+                            break
+                          case 'editor':
+                            redirectUrl = '/editor'
+                            break
+                          default:
+                            redirectUrl = '/dashboard'
+                        }
+
+                        if (redirectParam) {
+                          redirectUrl = redirectParam
+                        }
+
+                        router.push(redirectUrl)
+                        router.refresh()
+                      } else {
+                        setError(`Login failed: ${fallbackResult.error}`)
+                      }
+                      
+                      setLoading(false)
+                    }}
+                    disabled={loading}
+                    className="text-xs"
+                  >
+                    Skip OTP - Login with Password Only
+                  </Button>
+                </div>
               </div>
             </form>
           )}

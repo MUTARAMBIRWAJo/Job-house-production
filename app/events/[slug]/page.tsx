@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, MapPin, Users, Ticket } from 'lucide-react'
 import Image from 'next/image'
+import { isValidImageUrl } from '@/lib/utils/image-validation'
 
 interface Event {
   id: string
@@ -90,7 +91,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12">
           {/* Image */}
           <div className="flex items-center justify-center">
-            {event.image_url ? (
+            {event.image_url && isValidImageUrl(event.image_url) ? (
               <div className="relative w-full h-64 md:h-96">
                 <Image
                   src={event.image_url}

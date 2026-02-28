@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, Share2 } from 'lucide-react'
 import Image from 'next/image'
+import { isValidImageUrl } from '@/lib/utils/image-validation'
 
 interface NewsArticle {
   id: string
@@ -95,7 +96,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         </div>
 
         {/* Featured Image */}
-        {article.featured_image && (
+        {article.featured_image && isValidImageUrl(article.featured_image) && (
           <div className="relative w-full h-96 rounded-2xl overflow-hidden">
             <Image
               src={article.featured_image}

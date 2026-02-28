@@ -115,9 +115,11 @@ export default function DashboardLayout({
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
-          .single()
+          .maybeSingle()
         
-        setUser(profile)
+        if (profile) {
+          setUser(profile)
+        }
       }
     } catch (error) {
       console.error('Error fetching user:', error)

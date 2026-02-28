@@ -63,11 +63,10 @@ export default function DashboardPage() {
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
-          .single()
-        
-        setUser(profile)
+          .maybeSingle()
         
         if (profile) {
+          setUser(profile)
           await fetchDashboardStats(profile.id, profile.role)
         }
       }

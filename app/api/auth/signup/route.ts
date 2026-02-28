@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('id')
       .eq('email', email)
-      .single()
+      .maybeSingle()
 
     if (existingProfile) {
       return NextResponse.json(
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         status: 'active'
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (profileError) {
       console.error('Profile creation error:', profileError)

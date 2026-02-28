@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, Calendar, MapPin } from 'lucide-react'
 import Image from 'next/image'
+import { isValidImageUrl } from '@/lib/utils/image-validation'
 
 async function getEvents(searchTerm?: string) {
   const supabase = await createClient()
@@ -108,7 +109,7 @@ export default async function EventsPage({
               <Link key={event.id} href={`/events/${event.slug}`}>
                 <div className="group cursor-pointer h-full">
                   <div className="relative h-48 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg overflow-hidden mb-4 flex items-center justify-center">
-                    {event.image_url ? (
+                    {event.image_url && isValidImageUrl(event.image_url) ? (
                       <Image
                         src={event.image_url}
                         alt={event.title}

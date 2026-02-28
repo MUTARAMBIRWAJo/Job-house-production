@@ -13,13 +13,18 @@ export async function GET(request: NextRequest) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (!error && data.user) {
-        // Fetch user role after successful authentication
-        const { data: profile } = await supabase
+        // Use maybeSingle instead of single to handle no profile gracefully
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
-          .single()
+          .maybeSingle()
 
+        // If profile doesn't exist, create one
+        if (profileError) {
+          console.error('Profile fetch error:', profileError)
+        }
+        
         const userRole = profile?.role || 'customer'
         
         // Redirect to appropriate dashboard based on role

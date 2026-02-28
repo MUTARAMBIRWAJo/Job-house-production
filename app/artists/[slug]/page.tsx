@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Users, Music, Globe, Verified } from 'lucide-react'
 import Image from 'next/image'
+import { isValidImageUrl } from '@/lib/utils/image-validation'
 
 interface Artist {
   id: string
@@ -87,7 +88,7 @@ export default async function ArtistDetailPage({ params }: { params: { slug: str
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12">
           {/* Image */}
           <div className="flex items-center justify-center">
-            {artist.image_url ? (
+            {artist.image_url && isValidImageUrl(artist.image_url) ? (
               <div className="relative w-full h-64 md:h-96">
                 <Image
                   src={artist.image_url}
@@ -169,7 +170,7 @@ export default async function ArtistDetailPage({ params }: { params: { slug: str
               <Link key={song.id} href={`/songs/${song.slug}`}>
                 <div className="group cursor-pointer h-full">
                   <div className="relative h-48 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg overflow-hidden mb-4 flex items-center justify-center">
-                    {song.cover_image ? (
+                    {song.cover_image && isValidImageUrl(song.cover_image) ? (
                       <Image
                         src={song.cover_image}
                         alt={song.title}

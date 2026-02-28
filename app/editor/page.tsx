@@ -33,10 +33,10 @@ export default async function EditorDashboardPage() {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
   
   // Only allow editor and admin roles
-  if (profile?.role !== 'editor' && profile?.role !== 'admin') {
+  if (!profile || (profile.role !== 'editor' && profile.role !== 'admin')) {
     redirect('/dashboard')
   }
 
