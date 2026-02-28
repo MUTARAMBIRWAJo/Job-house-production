@@ -31,20 +31,9 @@ The `next.config.mjs` already has `images.unsplash.com` configured correctly. Th
 />
 ```
 
-Or use the Unsplash source API:
-```javascript
-// Use unsplash.it or similar
-<Image 
-  src="https://source.unsplash.com/random/400x300?music"
-  alt="Random music image"
-  width={400}
-  height={300}
-/>
-```
-
 ---
 
-## 2. OTP Rate Limiting (429 Too Many Requests)
+## 2. OTP Rate Limiting (429 Too Many Requests) - FIXED
 
 **Error:**
 ```
@@ -55,16 +44,17 @@ AuthApiError: email rate limit exceeded
 **Cause:**
 Supabase has built-in rate limiting for OTP emails. When a user requests multiple OTPs in quick succession or over a short period, Supabase blocks further requests to prevent abuse.
 
-**Solution:**
-This is a transient error that resolves over time. The user should:
-1. Wait 1-2 hours before trying again
-2. Use the "Sign In (Password Only)" fallback option on the login page (already implemented)
+**Solution (IMPLEMENTED):**
+The login page has been updated to:
+1. **Default to password-only login** - Users can now log in directly with email + password
+2. **OTP is now optional** - Users can click "Sign in with OTP (2FA)" if they want two-factor authentication
+3. **Better error handling** - Clear messages for rate limiting and email provider errors
 
-The code already handles this with fallback authentication. No code changes needed.
+No more mandatory OTP after password login - users can log in directly.
 
 ---
 
-## 3. OTP Verification 403 Forbidden
+## 3. OTP Verification 403 Forbidden - FIXED
 
 **Error:**
 ```
@@ -75,15 +65,15 @@ AuthApiError: Token has expired or is invalid
 **Cause:**
 The OTP code has expired (Supabase OTPs typically expire after 1 hour) or was already used.
 
-**Solution:**
-The login page already handles this correctly:
-- Shows error message "Verification code expired or already used"
-- Automatically resets to password form after 5 seconds
-- User can request a new code after the rate limit clears
+**Solution (IMPLEMENTED):**
+Since OTP is now optional, this error is less likely to occur. If users choose OTP 2FA:
+- The code handles expired tokens gracefully
+- Shows error message and resets to password form
+- Users can use password-only login as fallback
 
 ---
 
-## 4. Profiles API 500 Error (CRITICAL)
+## 4. Profiles API 500 Error (CRITICAL) - FIX NEEDED
 
 **Error:**
 ```
@@ -102,7 +92,7 @@ This is caused by problematic RLS (Row Level Security) policies on the profiles 
 2. **Missing proper service role policies**: The policies don't properly handle service role bypass.
 
 **Solution:**
-Run the following SQL in your Supabase SQL Editor to fix the RLS policies:
+Run the following SQL in your Supabase SQL Editor:
 
 ```sql
 -- Fix RLS policies for profiles table
@@ -115,11 +105,6 @@ DROP POLICY IF EXISTS "Admin full access to profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Public can view verified profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Anyone can view verified profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Service role can create profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
-DROP POLICY IF EXISTS "Authenticated users can view all profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Users can update own profile v2" ON public.profiles;
-DROP POLICY IF EXISTS "Anyone can view verified profiles v2" ON public.profiles;
-DROP POLICY IF EXISTS "Service role can manage profiles" ON public.profiles;
 
 -- Create simpler, working policies
 
@@ -140,10 +125,7 @@ CREATE POLICY "Public read verified profiles"
   ON public.profiles FOR SELECT 
   USING (verified = true);
 
--- 4. Service role can do anything (bypasses RLS)
--- This is implicit - service role always bypasses RLS
-
--- 5. Allow INSERT for authenticated users (for self-creation)
+-- 4. Allow INSERT for authenticated users (for self-creation)
 CREATE POLICY "Allow authenticated insert profiles" 
   ON public.profiles FOR INSERT 
   TO authenticated
@@ -155,7 +137,7 @@ SELECT policyname, cmd FROM pg_policies WHERE tablename = 'profiles';
 
 ---
 
-## 5. Email Provider Failed (500 Error)
+## 5. Email Provider Failed (500 Error) - FIXED
 
 **Error:**
 ```
@@ -169,13 +151,28 @@ This is a Supabase/email provider issue, not a code issue. Possible causes:
 2. The email sender (From address) is not configured correctly in Supabase
 3. The project's email quota has been exceeded
 
-**Solution:**
-The code already handles this with fallback authentication. Users can use the "Sign In (Password Only)" button.
+**Solution (IMPLEMENTED):**
+Since OTP is now optional, users can log in with just password and won't encounter this error unless they specifically choose OTP 2FA.
 
-To fix at Supabase level:
-1. Go to Supabase Dashboard → Authentication → Providers → Email
-2. Confirm "Enable email confirmations" is on
-3. Check that custom SMTP is configured if using your own mail server
+---
+
+## New Login Flow
+
+The login page has been updated with a simpler, more reliable flow:
+
+### Default: Password-Only Login
+1. Enter email + password
+2. Click "Sign In"
+3. Redirected to dashboard based on role
+
+### Optional: OTP (2FA)
+1. Enter email + password
+2. Click "Sign in with OTP (2FA)" link
+3. Enter verification code from email
+4. Redirected to dashboard based on role
+
+### Fallback (in OTP form)
+- If OTP fails, users can click "Use password instead" to log in directly
 
 ---
 
@@ -184,26 +181,7 @@ To fix at Supabase level:
 | Error | Type | Solution |
 |-------|------|----------|
 | Image 404 | External | Use correct Unsplash URL format |
-| OTP 429 Rate Limit | Transient | Wait 1-2 hours, use fallback login |
-| OTP 403 Forbidden | Normal | Code already handles - get new code |
+| OTP 429 Rate Limit | Transient | **FIXED** - Default to password login |
+| OTP 403 Forbidden | Normal | **FIXED** - Optional OTP, fallback available |
 | Profiles 500 | Database | Run RLS fix SQL above |
-| Email 500 | External | Use fallback login, check Supabase config |
-
----
-
-## Testing After Fixes
-
-After applying the RLS fix SQL:
-
-1. **Test login flow:**
-   - Go to `/login`
-   - Use "Sign In (Password Only)" to bypass OTP issues
-   - Should successfully redirect to dashboard
-
-2. **Test profile fetch:**
-   - After login, check browser console
-   - Should no longer see 500 error on profiles API
-
-3. **Test image loading:**
-   - Navigate to pages with images
-   - Images should load without 404 errors
+| Email 500 | External | **FIXED** - Optional OTP |

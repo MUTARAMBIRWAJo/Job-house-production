@@ -59,15 +59,27 @@ export default function DashboardPage() {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       
       if (authUser) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .maybeSingle()
+        let profile = null
+        
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .maybeSingle()
+          
+          profile = data
+        } catch (e) {
+          console.warn('Profile fetch failed:', e)
+        }
         
         if (profile) {
           setUser(profile)
           await fetchDashboardStats(profile.id, profile.role)
+        } else {
+          // Use auth metadata for role
+          const userRole = (authUser.app_metadata?.role as UserRole) || 'customer'
+          await fetchDashboardStats(authUser.id, userRole)
         }
       }
     } catch (error) {

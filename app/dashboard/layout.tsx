@@ -111,14 +111,49 @@ export default function DashboardLayout({
       const { data: { user: authUser } } = await supabase.auth.getUser()
       
       if (authUser) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .maybeSingle()
+        // Try to get profile first
+        let profile = null
+        
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .maybeSingle()
+          
+          profile = data
+        } catch (e) {
+          // Profile query failed - will use auth metadata
+          console.warn('Profile fetch failed, using auth metadata:', e)
+        }
         
         if (profile) {
           setUser(profile)
+        } else {
+          // Fallback: use role from auth metadata
+          const userRole = (authUser.app_metadata?.role as string) || 'customer'
+          setUser({
+            id: authUser.id,
+            email: authUser.email || '',
+            full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '',
+            role: userRole,
+            avatar_url: authUser.user_metadata?.avatar_url || null,
+            phone: null,
+            bio: null,
+            is_verified: false,
+            artist_id: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            two_factor_secret: null,
+            two_factor_enabled: false,
+            editor_permissions: {
+              can_edit_news: false,
+              can_publish_news: false,
+              can_approve_lyrics: false,
+              can_view_analytics: false,
+              can_feature_content: false,
+            },
+          } as unknown as Profile)
         }
       }
     } catch (error) {
