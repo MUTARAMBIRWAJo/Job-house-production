@@ -1,53 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Search, ShoppingCart } from 'lucide-react'
-import Image from 'next/image'
+import { redirect } from 'next/navigation'
 
-async function getProducts(searchTerm?: string) {
-  const supabase = await createClient()
-  
-  let query = supabase
-    .from('products')
-    .select('*')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-
-  if (searchTerm) {
-    query = query.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-  }
-
-  const { data } = await query.limit(100)
-  return data || []
+export default function ProductsPage() {
+  redirect('/store')
+  return null
 }
 
-export const metadata = {
-  title: 'Store - Gospel Music & Production',
-  description: 'Shop our collection of music, production tools, and services.',
-}
-
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string }
-}) {
-  const searchTerm = searchParams.q
-  const products = await getProducts(searchTerm)
-
-  return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-8 md:p-12">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Gospel Music Store
-            </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl">
-              Discover and purchase exclusive gospel music, production tools, and services.
-            </p>
-          </div>
 
           {/* Search */}
           <form action="/products" method="get" className="flex gap-2 max-w-md">

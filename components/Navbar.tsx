@@ -20,7 +20,7 @@ export default function Navbar() {
     { label: 'Artists', href: '/artists' },
     { label: 'Events', href: '/events-ssr' },
     { label: 'News', href: '/news' },
-    { label: 'Store', href: '/products' },
+    { label: 'Store', href: '/store' },
     { label: 'Studio', href: '/studio' },
   ];
 
