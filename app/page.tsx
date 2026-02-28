@@ -111,12 +111,9 @@ async function getFeaturedSongs() {
     .limit(6)
 
   if (error) {
-    console.error('Songs fetch error:', error)
+    console.error('[v0] Songs fetch error:', error)
     return []
   }
-
-  console.log("Raw songs:", songs)
-  console.log("Songs count:", songs?.length || 0)
 
   return songs || []
 }
@@ -127,9 +124,14 @@ async function getFeaturedArtists() {
   const { data: artists, error } = await supabase
     .from('artists')
     .select('*')
-    .eq('verified_status', true)
+    .eq('verified_status', 'verified')
     .order('created_at', { ascending: false })
     .limit(6)
+
+  if (error) {
+    console.error('[v0] Featured artists fetch error:', error)
+    return []
+  }
 
   return artists || []
 }
@@ -140,16 +142,14 @@ async function getUpcomingEvents() {
   const { data: events, error } = await supabase
     .from('events')
     .select('*')
+    .in('status', ['upcoming', 'active'])
     .order('event_date', { ascending: true })
     .limit(6)
 
   if (error) {
-    console.error('Events fetch error:', error)
+    console.error('[v0] Events fetch error:', error)
     return []
   }
-
-  console.log("Raw events:", events)
-  console.log("Events count:", events?.length || 0)
 
   return events || []
 }
@@ -160,16 +160,14 @@ async function getLatestNews() {
   const { data: news, error } = await supabase
     .from('news')
     .select('*')
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(6)
 
   if (error) {
-    console.error('News fetch error:', error)
+    console.error('[v0] News fetch error:', error)
     return []
   }
-
-  console.log("Raw news:", news)
-  console.log("News count:", news?.length || 0)
 
   return news || []
 }
@@ -188,49 +186,52 @@ export default async function HomePage() {
   console.log('News fetched:', news.length)
 
   return (
-    <div className="space-y-20">
+    <div className="space-y-24">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary via-primary to-primary/80 text-white py-20 overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 right-20 w-72 h-72 bg-secondary/30 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-10 left-20 w-72 h-72 bg-secondary/20 rounded-full blur-3xl"></div>
+      <section className="relative bg-gradient-to-br from-primary via-primary/95 to-primary/90 text-white py-24 md:py-32 overflow-hidden">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-secondary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/15 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <h1 className="text-5xl md:text-6xl font-bold leading-tight text-balance">
-                  Elevating <span className="text-secondary">Gospel Music</span> in Rwanda
+            <div className="space-y-8">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/20 rounded-full">
+                  <span className="w-2 h-2 bg-secondary rounded-full"></span>
+                  <span className="text-sm font-semibold text-secondary">Gospel Music Platform</span>
+                </div>
+                <h1 className="text-5xl md:text-7xl font-serif font-bold leading-tight text-balance">
+                  Gospel Music <span className="text-secondary">Excellence</span> Reimagined
                 </h1>
-                <p className="text-lg md:text-xl text-gray-100 text-balance">
-                  Discover authentic gospel lyrics, connect with talented artists, and access professional music production services.
+                <p className="text-xl text-white/90 text-balance leading-relaxed">
+                  Discover authentic gospel lyrics, connect with Rwanda's finest artists, and access world-class music production services.
                 </p>
               </div>
 
-              <form action="/search" className="flex gap-2 mt-8">
+              <form action="/search" className="flex gap-3 mt-8 max-w-md">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-4 top-4 w-5 h-5 text-white/50" />
                   <Input
                     type="text"
                     name="q"
                     placeholder="Search songs or artists..."
-                    className="pl-10 py-3 rounded-lg text-primary placeholder-gray-400 border-secondary/30 focus:border-secondary"
+                    className="pl-12 py-3 rounded-xl text-primary placeholder:text-white/40 bg-white/95 focus:bg-white border-0 focus:ring-2 focus:ring-secondary"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="bg-secondary hover:bg-secondary/90 text-primary font-semibold px-8"
+                  className="bg-secondary hover:bg-secondary/90 text-primary font-semibold px-8 rounded-xl"
                 >
                   Search
                 </Button>
               </form>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-wrap gap-4 pt-6">
                 <Link href="/songs">
                   <Button
-                    variant="outline"
-                    className="border-white text-white hover:bg-white/10"
+                    className="bg-white/95 hover:bg-white text-primary font-semibold px-8 rounded-xl"
                   >
                     Explore Songs
                   </Button>
@@ -238,17 +239,23 @@ export default async function HomePage() {
                 <Link href="/artists">
                   <Button
                     variant="outline"
-                    className="border-white text-white hover:bg-white/10"
+                    className="border-white/50 text-white hover:bg-white/20 font-semibold px-8 rounded-xl"
                   >
-                    Find Artists
+                    Discover Artists
                   </Button>
                 </Link>
               </div>
             </div>
 
-            <div className="hidden md:flex justify-center">
-              <div className="relative w-full h-96 bg-white/10 rounded-2xl border border-white/20 flex items-center justify-center">
-                <Music className="w-32 h-32 text-secondary/30" />
+            <div className="hidden md:flex justify-center items-center">
+              <div className="relative w-full h-96">
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary/30 to-secondary/10 rounded-2xl blur-2xl"></div>
+                <div className="relative h-full bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 flex items-center justify-center">
+                  <div className="text-center space-y-4">
+                    <Music className="w-20 h-20 text-secondary/50 mx-auto" />
+                    <p className="text-white/60 font-medium">Gospel Music Hub</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -256,15 +263,15 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Songs Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="space-y-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="space-y-10">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-4xl font-bold text-foreground mb-2">Latest Songs</h2>
-              <p className="text-muted-foreground">Newest gospel songs added recently</p>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-3">Latest Songs</h2>
+              <p className="text-lg text-muted-foreground">Discover the newest gospel songs added to our collection</p>
             </div>
             <Link href="/songs">
-              <Button variant="outline">View All</Button>
+              <Button variant="outline" className="rounded-xl">View All Songs</Button>
             </Link>
           </div>
 
@@ -285,15 +292,15 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Artists Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="space-y-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="space-y-10">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-4xl font-bold text-foreground mb-2">Featured Artists</h2>
-              <p className="text-muted-foreground">Talented gospel musicians from Rwanda</p>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-3">Featured Artists</h2>
+              <p className="text-lg text-muted-foreground">Connect with Rwanda's most talented verified gospel musicians</p>
             </div>
             <Link href="/artists">
-              <Button variant="outline">View All</Button>
+              <Button variant="outline" className="rounded-xl">View All Artists</Button>
             </Link>
           </div>
 
@@ -314,15 +321,15 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Events Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="space-y-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="space-y-10">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-4xl font-bold text-foreground mb-2">Latest Events</h2>
-              <p className="text-muted-foreground">Recently added gospel events and activities</p>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-3">Upcoming Events</h2>
+              <p className="text-lg text-muted-foreground">Don't miss out on the latest gospel music events and gatherings</p>
             </div>
-            <Link href="/events">
-              <Button variant="outline">View All Events</Button>
+            <Link href="/events-ssr">
+              <Button variant="outline" className="rounded-xl">View All Events</Button>
             </Link>
           </div>
 
@@ -427,12 +434,12 @@ export default async function HomePage() {
       </section>
 
       {/* Services Section */}
-      <section className="bg-muted/50 py-20">
+      <section className="bg-muted/30 py-20 md:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Our Services</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Professional studio services to help your music reach the world
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">Professional Services</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Studio-quality production and comprehensive music services designed to help your gospel music reach audiences worldwide
             </p>
           </div>
 

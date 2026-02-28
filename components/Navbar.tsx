@@ -25,45 +25,47 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img
               src="/Logo_for_JOB_HOUSE_PRODUCTION.png"
               alt="Job House Production"
-              className="h-16 w-auto"
+              className="h-14 w-auto"
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:text-secondary-foreground rounded-md transition-colors"
+                className="px-1 py-2 text-sm font-medium text-foreground hover:text-secondary transition-colors relative group"
               >
                 {item.label}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
           </div>
 
           {/* CTA Buttons (Desktop) */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-3">
             <Link href="/login">
-              <Button variant="ghost" size="icon" aria-label="Login">
-                <LogIn className="w-5 h-5" />
+              <Button variant="ghost" size="sm" className="hover:bg-muted rounded-xl" aria-label="Login">
+                <LogIn className="w-4 h-4 mr-1.5" />
+                Login
               </Button>
             </Link>
             <Link href="/contact">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-xl border-border/50 hover:bg-muted">
                 Contact
               </Button>
             </Link>
             <Link href="/studio">
-              <Button className="bg-secondary hover:bg-secondary/90 text-primary font-semibold" size="sm">
+              <Button className="bg-secondary hover:bg-secondary/90 text-primary font-semibold rounded-xl px-6" size="sm">
                 Book Studio
               </Button>
             </Link>

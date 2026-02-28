@@ -7,28 +7,38 @@ import WhatsAppButton from '@/components/WhatsAppButton'
 import { Providers } from '@/components/providers/Providers'
 
 export const metadata: Metadata = {
-  title: 'JOB HOUSE PRODUCTION - Gospel Music & Production Platform',
-  description: 'Elevating Gospel Music in Rwanda. Gospel lyrics, artist profiles, studio services, and music production.',
-  keywords: ['gospel music', 'lyrics', 'kinyarwanda', 'music production', 'studio services', 'Rwanda'],
-  authors: [{ name: 'JOB HOUSE PRODUCTION' }],
+  title: 'Gospel Music Excellence | Job House Production',
+  description: 'Discover authentic gospel music, connect with verified artists, access professional studio services, and explore Rwanda\'s vibrant gospel community.',
+  keywords: ['gospel music', 'gospel lyrics', 'gospel artists', 'music production', 'studio services', 'Rwanda gospel', 'kinyarwanda music'],
+  authors: [{ name: 'Job House Production' }],
+  creator: 'Job House Production',
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: 'https://jobhouseproduction.com',
-    siteName: 'JOB HOUSE PRODUCTION',
-    title: 'JOB HOUSE PRODUCTION - Gospel Music & Production Platform',
-    description: 'Elevating Gospel Music in Rwanda. Gospel lyrics, artist profiles, studio services, and music production.',
+    siteName: 'Job House Production',
+    title: 'Gospel Music Excellence | Job House Production',
+    description: 'Discover authentic gospel music, connect with verified artists, and access professional studio services.',
+    images: [{
+      url: 'https://jobhouseproduction.com/og-image.jpg',
+      width: 1200,
+      height: 630,
+      alt: 'Job House Production Gospel Music Platform'
+    }]
   },
   twitter: {
     card: 'summary_large_image',
     creator: '@jobhouseproduction',
+    title: 'Gospel Music Excellence | Job House Production',
+    description: 'Discover authentic gospel music and professional studio services.'
   },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#001f3f',
+  themeColor: '#36261f',
+  colorScheme: 'light dark',
   userScalable: true,
 }
 
