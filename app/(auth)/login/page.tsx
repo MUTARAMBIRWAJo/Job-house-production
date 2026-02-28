@@ -40,7 +40,7 @@ function LoginPageContent() {
     }
   }, [resendCooldown])
 
-  // Step 1: Handle password submission
+  // Step 1: Handle password submission - direct login without mandatory OTP
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
@@ -52,14 +52,21 @@ function LoginPageContent() {
     setError('')
 
     try {
-      // Validate user credentials
+      // Direct sign in with password - this is the primary login method
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (signInError) {
-        setError('Invalid email or password')
+        // Handle specific error cases
+        if (signInError.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password')
+        } else if (signInError.message.includes('Email not confirmed')) {
+          setError('Please confirm your email address first')
+        } else {
+          setError(`Login failed: ${signInError.message}`)
+        }
         return
       }
 
@@ -68,7 +75,68 @@ function LoginPageContent() {
         return
       }
 
-      // Step 3: Send OTP after successful password validation
+      // Get user role from app_metadata or fall back to customer
+      const userRole = data.user.app_metadata?.role || 'customer'
+      
+      // Determine redirect based on role
+      let redirectUrl = '/dashboard'
+      
+      switch (userRole) {
+        case 'admin':
+          redirectUrl = '/admin'
+          break
+        case 'artist':
+          redirectUrl = '/artist/dashboard'
+          break
+        case 'editor':
+          redirectUrl = '/editor'
+          break
+        default:
+          redirectUrl = '/dashboard'
+      }
+
+      // Apply redirect parameter if provided
+      if (redirectParam) {
+        redirectUrl = redirectParam
+      }
+
+      // Success - redirect to dashboard
+      router.push(redirectUrl)
+      router.refresh()
+      
+    } catch (err) {
+      console.error("LOGIN ERROR:", err)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(`Login failed: ${errorMessage}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle sending OTP for 2FA login
+  const handleSendOtp = async () => {
+    if (!email || !password) {
+      setError('Please enter email and password first')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      // First validate the user exists with password
+      const { data: passwordData, error: passwordError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (passwordError || !passwordData.user) {
+        setError('Invalid email or password')
+        setLoading(false)
+        return
+      }
+
+      // Now send OTP
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -79,67 +147,26 @@ function LoginPageContent() {
       if (otpError) {
         console.error("OTP ERROR:", otpError)
         
-        // Check if it's an email provider issue - expanded check
-        const isEmailProviderError = 
-          otpError.message.includes('sending confirmation email') || 
-          otpError.message.includes('Error sending magic link') ||
-          otpError.message.includes('Error sending magic link email') ||
-          otpError.message.includes('unexpected_failure') ||
-          otpError.status === 500
-          
-        if (isEmailProviderError) {
-          
-          // Try fallback authentication
-          console.log("Email provider failed, trying fallback authentication...")
-          const fallbackResult = await signInWithPasswordOnly(email, password)
-          
-          if (fallbackResult.success) {
-            // Fallback successful - redirect to dashboard
-            const userRole = fallbackResult.role
-            
-            let redirectUrl = '/dashboard' // default
-            
-            switch (userRole) {
-              case 'admin':
-                redirectUrl = '/admin'
-                break
-              case 'artist':
-                redirectUrl = '/artist/dashboard'
-                break
-              case 'editor':
-                redirectUrl = '/editor'
-                break
-              default:
-                redirectUrl = '/dashboard'
-            }
-
-            // Apply redirect parameter if provided
-            if (redirectParam) {
-              redirectUrl = redirectParam
-            }
-
-            router.push(redirectUrl)
-            router.refresh()
-            return
-          } else {
-            // Fallback also failed
-            setError(`Login failed: ${fallbackResult.error}`)
-          }
+        // Check for rate limiting
+        if (otpError.status === 429) {
+          setError('Too many requests. Please wait a few minutes before trying again.')
+        } else if (otpError.status === 500) {
+          setError('Email service temporarily unavailable. Please use password-only login.')
         } else {
-          // Other OTP error
-          setError(`OTP error: ${otpError.message}`)
+          setError(`Failed to send OTP: ${otpError.message}`)
         }
+        setLoading(false)
+        return
       }
 
-      // Step 4: Show OTP input UI
+      // OTP sent successfully
       setStep('otp')
       setResendCooldown(60)
       setError('')
       
     } catch (err) {
-      console.error("LOGIN ERROR:", err)
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setError(`Login failed: ${errorMessage}`)
+      console.error("OTP SEND ERROR:", err)
+      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -312,7 +339,7 @@ function LoginPageContent() {
           </CardTitle>
           <CardDescription>
             {step === 'password' 
-              ? 'Sign in to your Job House Production account'
+              ? 'Sign in with your email and password'
               : 'Enter the 6-8 digit code sent to your email'
             }
           </CardDescription>
@@ -392,77 +419,24 @@ function LoginPageContent() {
                 ) : (
                   <>
                     <LogIn className="w-4 h-4 mr-2" />
-                    Sign In with 2FA
+                    Sign In
                   </>
                 )}
               </Button>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or
-                  </span>
-                </div>
+              <div className="text-center">
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={handleSendOtp}
+                  disabled={loading || !email || !password}
+                  className="text-sm"
+                >
+                  <Shield className="w-4 h-4 mr-1" />
+                  Sign in with OTP (2FA)
+                </Button>
               </div>
 
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                onClick={async () => {
-                  setLoading(true)
-                  setError('')
-                  
-                  const fallbackResult = await signInWithPasswordOnly(email, password)
-                  
-                  if (fallbackResult.success) {
-                    const userRole = fallbackResult.role
-                    
-                    let redirectUrl = '/dashboard' // default
-                    
-                    switch (userRole) {
-                      case 'admin':
-                        redirectUrl = '/admin'
-                        break
-                      case 'artist':
-                        redirectUrl = '/artist/dashboard'
-                        break
-                      case 'editor':
-                        redirectUrl = '/editor'
-                        break
-                      default:
-                        redirectUrl = '/dashboard'
-                    }
-
-                    if (redirectParam) {
-                      redirectUrl = redirectParam
-                    }
-
-                    router.push(redirectUrl)
-                    router.refresh()
-                  } else {
-                    setError(`Login failed: ${fallbackResult.error}`)
-                  }
-                  
-                  setLoading(false)
-                }}
-                disabled={loading || !email || !password}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Sign In (Password Only)
-                  </>
-                )}
-              </Button>
             </form>
           ) : (
             // OTP Form
