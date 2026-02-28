@@ -112,16 +112,17 @@ export async function registerWithoutEmail(email: string, password: string, full
         email: email,
         full_name: fullName,
         role: role,
-        is_verified: true // Auto-verify since email confirmation failed
+        verified: true, // Auto-verify since email confirmation failed
+        status: 'active'
       })
 
     if (profileError) {
       console.error("Profile creation error:", profileError)
-      // Try to clean up auth user to prevent orphaned accounts
-      await supabase.auth.admin.deleteUser(data.user.id).catch(console.error)
+      // Note: Orphaned auth user will need manual cleanup via Supabase dashboard
+      // Client-side code cannot use admin.deleteUser()
       return { 
         success: false, 
-        error: 'Failed to create user profile' 
+        error: profileError.message || 'Failed to create user profile. Please try again.' 
       }
     }
 

@@ -111,7 +111,8 @@ export async function register(formData: FormData) {
         email: validatedFields.email,
         full_name: validatedFields.full_name,
         role: validatedFields.role,
-        is_verified: false
+        verified: false,
+        status: 'active'
       })
 
     if (profileError) {
