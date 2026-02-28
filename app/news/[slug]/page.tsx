@@ -17,7 +17,7 @@ export default function NewsDetailPage() {
     const fetchArticle = async () => {
       try {
         setLoading(true)
-        const res = await fetch(`/api/news/${params.id}`)
+        const res = await fetch(`/api/news/slug/${params.slug}`)
 
         if (!res.ok) {
           throw new Error('Failed to fetch article')
@@ -33,10 +33,10 @@ export default function NewsDetailPage() {
       }
     }
 
-    if (params.id) {
+    if (params.slug) {
       fetchArticle()
     }
-  }, [params.id])
+  }, [params.slug])
 
   if (loading) {
     return (

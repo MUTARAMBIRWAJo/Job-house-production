@@ -10,19 +10,8 @@ async function getNews(category?: string) {
   
   let query = supabase
     .from('news')
-    .select(`
-      id,
-      title,
-      slug,
-      content,
-      excerpt,
-      category,
-      featured,
-      featured_image,
-      published_date,
-      created_at,
-      updated_at
-    `)
+    .select('id, title, slug, content, category, featured, featured_image, status, created_at, updated_at')
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
 
   // Apply category filter only if specified
@@ -33,12 +22,11 @@ async function getNews(category?: string) {
   const { data: news, error } = await query
 
   if (error) {
-    console.error('Error fetching news:', error)
+    console.error('[v0] Error fetching news:', error)
     return []
   }
 
-  console.log('📰 Raw news:', news)
-  console.log('📰 Real-time News fetched:', news?.length || 0)
+  console.log('[v0] Real-time News fetched:', news?.length || 0)
   return news || []
 }
 
@@ -112,7 +100,7 @@ export default async function NewsPage({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {news.map((article: any) => (
                 <article key={article.id} className="group">
-                  <Link href={`/news/${article.id}`} className="block">
+                  <Link href={`/news/${article.slug}`} className="block">
                     <div className="bg-card rounded-lg overflow-hidden border border-border hover:border-primary transition-colors">
                       <div className="h-48 bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
                         <Newspaper className="w-16 h-16 text-primary/30" />
@@ -130,7 +118,7 @@ export default async function NewsPage({
                           {article.title}
                         </h3>
                         <p className="text-muted-foreground mb-4 line-clamp-3">
-                          {article.excerpt}
+                          {article.content?.substring(0, 150) || 'No description available'}
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">

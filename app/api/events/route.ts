@@ -18,26 +18,12 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('events')
-      .select(`
-        *
-      `)
+      .select('id, title, slug, description, event_date, event_end_date, location, venue_address, featured_image, ticket_url, capacity, status, created_at, updated_at')
       .order('event_date', { ascending: true })
 
     // Apply filters
-    if (type) {
-      query = query.eq('event_type', type)
-    }
-    
-    if (city) {
-      query = query.eq('city', city)
-    }
-    
     if (featured === 'true') {
-      query = query.eq('is_featured', true)
-    }
-    
-    if (needsCoverage === 'true') {
-      query = query.or('needs_audio_coverage.eq.true,needs_video_coverage.eq.true')
+      query = query.eq('featured', true)
     }
 
     // Date filters
@@ -66,31 +52,31 @@ export async function GET(request: Request) {
 
     console.log('[API] Raw events data:', data)
 
-    // Transform data to match our types
+    // Transform data to match our types (mapping our schema to Event interface)
     const events: Event[] = (data || []).map((event: any) => ({
       id: event.id,
       title: event.title,
       slug: event.slug,
       description: event.description,
-      event_type: event.event_type,
+      event_type: 'concert' as any, // Default type for compatibility
       event_date: event.event_date,
-      event_time: event.event_time,
-      venue: event.venue,
+      event_time: null,
+      venue: event.location || '',
       venue_address: event.venue_address,
-      city: event.city,
-      country: event.country,
-      poster_image: event.poster_image,
-      organizer_name: event.organizer_name,
-      organizer_phone: event.organizer_phone,
-      organizer_email: event.organizer_email,
-      ticket_price: event.ticket_price,
-      is_free: event.is_free,
-      needs_audio_coverage: event.needs_audio_coverage,
-      needs_video_coverage: event.needs_video_coverage,
-      coverage_contact: event.coverage_contact,
-      is_featured: event.is_featured,
-      is_published: event.is_published,
-      published_at: event.published_at,
+      city: null,
+      country: 'Rwanda',
+      poster_image: event.featured_image,
+      organizer_name: null,
+      organizer_phone: null,
+      organizer_email: null,
+      ticket_price: 0,
+      is_free: !event.ticket_url,
+      needs_audio_coverage: false,
+      needs_video_coverage: false,
+      coverage_contact: null,
+      is_featured: false,
+      is_published: event.status === 'upcoming',
+      published_at: event.created_at,
       created_at: event.created_at,
       updated_at: event.updated_at
     }))
@@ -119,30 +105,20 @@ export async function POST(request: Request) {
     const {
       title,
       description,
-      event_type = 'concert',
       event_date,
-      event_time,
-      venue,
+      event_end_date,
+      location,
       venue_address,
-      city,
-      country = 'Rwanda',
-      poster_image,
-      organizer_name,
-      organizer_phone,
-      organizer_email,
-      ticket_price = 0,
-      is_free = true,
-      needs_audio_coverage = false,
-      needs_video_coverage = false,
-      coverage_contact,
-      is_featured = false,
-      is_published = true
+      featured_image,
+      ticket_url,
+      capacity = null,
+      status = 'upcoming'
     } = body
 
     // Validation
-    if (!title || !event_date || !venue) {
+    if (!title || !event_date || !location) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields: title, event_date, venue' },
+        { success: false, error: 'Missing required fields: title, event_date, location' },
         { status: 400 }
       )
     }
@@ -161,25 +137,14 @@ export async function POST(request: Request) {
         title,
         slug,
         description,
-        event_type,
         event_date,
-        event_time,
-        venue,
+        event_end_date,
+        location,
         venue_address,
-        city,
-        country,
-        poster_image,
-        organizer_name,
-        organizer_phone,
-        organizer_email,
-        ticket_price,
-        is_free,
-        needs_audio_coverage,
-        needs_video_coverage,
-        coverage_contact,
-        is_featured,
-        is_published,
-        published_at: is_published ? new Date().toISOString() : null
+        featured_image,
+        ticket_url,
+        capacity,
+        status
       })
       .select()
       .single()

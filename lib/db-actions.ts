@@ -272,47 +272,85 @@ export async function getNews(options?: {
 }): Promise<NewsArticle[]> {
   const supabase = getPublicSupabase()
 
-  let query = supabase
-    .from('news')
-    .select('*')
-    .order('created_at', { ascending: false })
+  try {
+    let query = supabase
+      .from('news')
+      .select('id, title, slug, content, featured_image, category, featured, status, created_at, updated_at')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
 
-  if (options?.searchTerm) {
-    query = query.or(`title.ilike.%${options.searchTerm}%,content.ilike.%${options.searchTerm}%`)
-  }
+    if (options?.searchTerm) {
+      query = query.or(`title.ilike.%${options.searchTerm}%,content.ilike.%${options.searchTerm}%`)
+    }
 
-  if (options?.featured) {
-    query = query.eq('is_featured', true)
-  }
+    if (options?.featured) {
+      query = query.eq('featured', true)
+    }
 
-  const limit = options?.limit || 10
-  const offset = options?.offset || 0
-  query = query.range(offset, offset + limit - 1)
+    const limit = options?.limit || 10
+    const offset = options?.offset || 0
+    query = query.range(offset, offset + limit - 1)
 
-  const { data, error } = await query
+    const { data, error } = await query
 
-  if (error) {
-    console.error('Error fetching news:', error)
+    if (error) {
+      console.error('[v0] News fetch error:', error)
+      return []
+    }
+
+    // Map database fields to NewsArticle interface
+    return (data || []).map(item => ({
+      id: item.id,
+      title: item.title,
+      slug: item.slug,
+      excerpt: item.content?.substring(0, 160) || null,
+      content: item.content,
+      author: null, // Will be updated when user system is ready
+      category: item.category,
+      featured_image: item.featured_image,
+      is_featured: item.featured,
+      published_at: item.created_at,
+      published_date: item.created_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    }))
+  } catch (err) {
+    console.error('[v0] News unexpected error:', err)
     return []
   }
-
-  console.log('News db-actions fetched:', data?.length || 0)
-  return data || []
 }
 
 export async function getNewsById(id: string): Promise<NewsArticle | null> {
   const supabase = getPublicSupabase()
 
-  const { data, error } = await supabase
-    .from('news')
-    .select('*')
-    .eq('id', id)
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('news')
+      .select('id, title, slug, content, featured_image, category, featured, status, created_at, updated_at')
+      .eq('id', id)
+      .single()
 
-  if (error || !data) {
-    console.error('Error fetching news article:', error)
-    return null
-  }
+    if (error || !data) {
+      console.error('[v0] News article fetch error:', error)
+      return null
+    }
+
+    // Map database fields to NewsArticle interface
+    return {
+      id: data.id,
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.content?.substring(0, 160) || null,
+      content: data.content,
+      author: null,
+      category: data.category,
+      featured_image: data.featured_image,
+      is_featured: data.featured,
+      published_at: data.created_at,
+      published_date: data.created_at,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    }
 
   return data
 }
