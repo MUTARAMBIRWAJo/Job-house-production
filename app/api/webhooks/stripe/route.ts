@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { updateOrderStatus } from '@/lib/db-actions'
+import { updateOrderStatus } from '@/lib/server/db-actions'
 
 // In production, you would:
 // 1. Get Stripe webhook secret from environment

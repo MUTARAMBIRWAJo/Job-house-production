@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOrdersByUserId, getOrderItems, getProductById } from '@/lib/db-actions'
+import { getOrdersByUserId, getOrderItems, getProductById } from '@/lib/server/db-actions'
 import { createClient } from '@/lib/supabase/server'
 
 /**

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getStudioLeadById, updateStudioLead } from '@/lib/db-actions'
+import { getStudioLeadById, updateStudioLead } from '@/lib/server/db-actions'
 
 export async function GET(
   request: NextRequest,

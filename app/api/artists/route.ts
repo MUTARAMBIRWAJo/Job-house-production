@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getArtists } from '@/lib/db-actions'
+import { getArtists } from '@/lib/server/db-actions'
 
 export async function GET(request: NextRequest) {
   try {

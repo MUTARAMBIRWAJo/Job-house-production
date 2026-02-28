@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { getSongs, getArtists, getNews } from '@/lib/db-actions'
+import { getSongs, getArtists, getNews } from '@/lib/server/db-actions'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://jobhouseproduction.com'

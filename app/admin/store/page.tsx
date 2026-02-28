@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { Package, DollarSign, ShoppingBag, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getStoreStats } from '@/lib/db-actions'
+import { getStoreStats } from '@/lib/server/db-actions'
 
 function StatCard({ icon: Icon, label, value, subtext }: {
   icon: React.ComponentType<{ className: string }>

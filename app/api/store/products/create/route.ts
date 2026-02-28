@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getProductBySlug } from '@/lib/db-actions'
+import { getProductBySlug } from '@/lib/server/db-actions'
 
 /**
  * Verify admin authentication

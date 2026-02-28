@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { submitStudioLead } from '@/lib/db-actions';
+// moved to server via API route; client components use fetch to interact with backend
 import { Loader2 } from 'lucide-react';
 
 interface FormData {
@@ -49,14 +49,23 @@ export default function MultiStepForm({ onClose }: MultiStepFormProps) {
 
     setIsSubmitting(true)
     try {
-      await submitStudioLead({
-        artist_name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        service_type: formData.projectType,
-        budget: parseInt(formData.budgetRange.split('-')[0]) || 0,
-        description: formData.description,
+      // call server-side API route to create lead
+      const res = await fetch('/api/studio-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          artist_name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          service_type: formData.projectType,
+          budget: parseInt(formData.budgetRange.split('-')[0]) || 0,
+          description: formData.description,
+        }),
       })
+
+      if (!res.ok) {
+        throw new Error('Request failed')
+      }
 
       setSubmitStatus({
         type: 'success',

@@ -105,8 +105,8 @@ export default function DashboardPage() {
       supabase.from('orders').select('total, created_at').order('created_at', { ascending: false }).limit(100)
     ])
 
-    const totalViews = songsRes.data?.reduce((sum, song) => sum + (song.view_count || 0), 0) || 0
-    const totalRevenue = ordersRes.data?.reduce((sum, order) => sum + (order.total || 0), 0) || 0
+    const totalViews = songsRes.data?.reduce((sum: number, song: any) => sum + (song.view_count || 0), 0) || 0
+    const totalRevenue = ordersRes.data?.reduce((sum: number, order: any) => sum + (order.total || 0), 0) || 0
 
     setStats({
       totalSongs: songsRes.data?.length || 0,
@@ -114,19 +114,19 @@ export default function DashboardPage() {
       totalEvents: eventsRes.data?.length || 0,
       totalViews,
       recentActivity: [
-        ...songsRes.data?.slice(0, 3).map(song => ({
+        ...songsRes.data?.slice(0, 3).map((song: any) => ({
           id: song.id,
           type: 'song' as const,
           title: `Song: ${song.id}`,
           created_at: song.created_at
         })) || [],
-        ...eventsRes.data?.slice(0, 3).map(event => ({
+        ...eventsRes.data?.slice(0, 3).map((event: any) => ({
           id: event.id,
           type: 'event' as const,
           title: `Event: ${event.title}`,
           created_at: event.created_at
         })) || [],
-        ...promotionsRes.data?.slice(0, 2).map(promo => ({
+        ...promotionsRes.data?.slice(0, 2).map((promo: any) => ({
           id: promo.id,
           type: 'promotion' as const,
           title: `Promotion: ${promo.title}`,
@@ -135,13 +135,13 @@ export default function DashboardPage() {
         })) || []
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5),
       topPerforming: [
-        ...songsRes.data?.slice(0, 5).map(song => ({
+        ...songsRes.data?.slice(0, 5).map((song: any) => ({
           id: song.id,
           title: `Song: ${song.id}`,
           views: song.view_count || 0,
           type: 'song' as const
         })) || [],
-        ...artistsRes.data?.slice(0, 5).map(artist => ({
+        ...artistsRes.data?.slice(0, 5).map((artist: any) => ({
           id: artist.id,
           title: artist.name,
           views: artist.follower_count || 0,
@@ -165,7 +165,7 @@ export default function DashboardPage() {
       supabase.from('artist_promotions').select('id, created_at, status').eq('user_id', userId)
     ])
 
-    const totalViews = songsRes.data?.reduce((sum, song) => sum + (song.view_count || 0), 0) || 0
+    const totalViews = songsRes.data?.reduce((sum: number, song: any) => sum + (song.view_count || 0), 0) || 0
 
     setStats({
       totalSongs: songsRes.data?.length || 0,
@@ -173,20 +173,20 @@ export default function DashboardPage() {
       totalEvents: eventsRes.data?.length || 0,
       totalViews,
       recentActivity: [
-        ...songsRes.data?.slice(0, 3).map(song => ({
+        ...songsRes.data?.slice(0, 3).map((song: any) => ({
           id: song.id,
           type: 'song' as const,
           title: `Song: ${song.id}`,
           created_at: song.created_at
         })) || [],
-        ...chordSheetsRes.data?.slice(0, 2).map(sheet => ({
+        ...chordSheetsRes.data?.slice(0, 2).map((sheet: any) => ({
           id: sheet.id,
           type: 'chord_sheet' as const,
           title: `Chord Sheet: ${sheet.id}`,
           created_at: sheet.created_at
         })) || []
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5),
-      topPerforming: songsRes.data?.slice(0, 5).map(song => ({
+      topPerforming: songsRes.data?.slice(0, 5).map((song: any) => ({
         id: song.id,
         title: `Song: ${song.id}`,
         views: song.view_count || 0,

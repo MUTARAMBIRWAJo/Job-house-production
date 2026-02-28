@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCRMStats, getStudioLeads } from '@/lib/db-actions'
+import { getCRMStats, getStudioLeads } from '@/lib/server/db-actions'
 import { createClient } from '@/lib/supabase/server'
 
 /**
