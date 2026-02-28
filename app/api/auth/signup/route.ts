@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -20,7 +21,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    // Use admin client for all operations (has unrestricted access)
+    const supabase = await createAdminClient()
 
     // Step 1: Check if user already exists
     const { data: existingProfile } = await supabase
@@ -36,18 +38,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 2: Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Step 2: Create auth user using admin client
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          full_name,
-          role: role || 'customer'
-        },
-        // Disable email confirmation for demo
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
-      }
+      user_metadata: {
+        full_name,
+        role: role || 'customer'
+      },
+      email_confirm: true  // Auto-confirm email for new signups
     })
 
     if (authError) {
@@ -67,8 +66,8 @@ export async function POST(request: NextRequest) {
 
     const userId = authData.user.id
 
-    // Step 3: Create profile - use server client for admin access
-    const { error: profileError } = await supabase
+    // Step 3: Create profile - use admin client (has full access, bypasses RLS)
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .insert({
         id: userId,
@@ -90,14 +89,14 @@ export async function POST(request: NextRequest) {
       })
 
       return NextResponse.json(
-        { success: false, error: 'Failed to create user profile. Please try again.' },
+        { success: false, error: `Failed to create user profile: ${profileError.message}` },
         { status: 400 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Registration successful! Please check your email or proceed to login.',
+      message: 'Registration successful! You can now login.',
       user: {
         id: authData.user.id,
         email: authData.user.email
@@ -107,7 +106,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Signup error:', error)
     return NextResponse.json(
-      { success: false, error: 'Registration failed. Please try again.' },
+      { success: false, error: error instanceof Error ? error.message : 'Registration failed. Please try again.' },
       { status: 500 }
     )
   }
