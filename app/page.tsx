@@ -102,10 +102,11 @@ async function getFeaturedSongs() {
         id,
         name,
         slug,
-        avatar_url,
+        image_url,
         verified_status
       )
     `)
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(6)
 
