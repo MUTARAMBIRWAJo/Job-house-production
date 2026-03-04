@@ -6,6 +6,9 @@ import { ArrowLeft, Users, Music, Globe, Verified } from 'lucide-react'
 import Image from 'next/image'
 import { isValidImageUrl } from '@/lib/utils/image-validation'
 
+// Allow dynamic rendering since we're fetching from Supabase
+export const dynamic = 'force-dynamic'
+
 interface Artist {
   id: string
   slug: string

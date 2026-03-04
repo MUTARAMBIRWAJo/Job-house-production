@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/client'
 import { EventManagement } from '@/components/EventManagement'
 import { Event, Profile } from '@/lib/types'
 
+// Allow dynamic rendering for authenticated pages
+export const dynamic = 'force-dynamic'
+
 export default async function EventsPage() {
   const supabase = createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()

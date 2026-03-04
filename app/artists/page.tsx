@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Artist } from '@/types'
 import { createPublicClient } from '@/lib/supabase/public'
 
+// Allow dynamic rendering since we're fetching from Supabase
+export const dynamic = 'force-dynamic'
+
 const GENRES = ['Gospel', 'Contemporary Gospel', 'Traditional Gospel', 'Reggae', 'Soul', 'Pop']
 
 // Artist interface

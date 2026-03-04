@@ -18,12 +18,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/terms`, changeFrequency: 'yearly' as const, priority: 0.5 },
   ]
 
-  // Fetch dynamic content from database
-  const [songs, artists, news] = await Promise.all([
-    getSongs({ limit: 100 }),
-    getArtists({ limit: 100 }),
-    getNews({ limit: 50 })
-  ])
+  // Fetch dynamic content from database with error handling
+  let songs = []
+  let artists = []
+  let news = []
+
+  try {
+    [songs, artists, news] = await Promise.all([
+      getSongs({ limit: 100 }).catch(() => []),
+      getArtists({ limit: 100 }).catch(() => []),
+      getNews({ limit: 50 }).catch(() => [])
+    ])
+  } catch (error) {
+    console.warn('Failed to fetch sitemap data from database, using static pages only')
+  }
 
   // Dynamic pages
   const songPages = songs.map((song) => ({
