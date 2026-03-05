@@ -23,71 +23,161 @@ import { createClient } from '@/lib/supabase/client'
 import { Profile, UserRole } from '@/lib/types'
 
 const sidebarItems = [
+  // ADMIN ITEMS
   {
-    title: 'Dashboard',
-    href: '/dashboard',
+    title: 'Admin Dashboard',
+    href: '/dashboard/admin',
     icon: LayoutDashboard,
-    roles: ['admin', 'artist', 'user']
+    roles: ['admin'],
+    section: 'Admin'
   },
   {
-    title: 'My Songs',
-    href: '/dashboard/songs',
+    title: 'Manage Songs',
+    href: '/dashboard/admin/songs',
     icon: Music,
-    roles: ['artist', 'admin']
+    roles: ['admin'],
+    section: 'Admin'
   },
   {
-    title: 'My Chord Sheets',
-    href: '/dashboard/chord-sheets',
+    title: 'Manage Artists',
+    href: '/dashboard/admin/artists',
+    icon: Users,
+    roles: ['admin'],
+    section: 'Admin'
+  },
+  {
+    title: 'Manage News',
+    href: '/dashboard/admin/news',
     icon: FileText,
-    roles: ['artist', 'admin']
+    roles: ['admin'],
+    section: 'Admin'
   },
   {
-    title: 'My Events',
-    href: '/dashboard/events',
+    title: 'Manage Events',
+    href: '/dashboard/admin/events',
     icon: Calendar,
-    roles: ['artist', 'admin']
+    roles: ['admin'],
+    section: 'Admin'
+  },
+  {
+    title: 'Orders & Revenue',
+    href: '/dashboard/admin/orders',
+    icon: DollarSign,
+    roles: ['admin'],
+    section: 'Admin'
+  },
+  {
+    title: 'Platform Users',
+    href: '/dashboard/admin/users',
+    icon: Users,
+    roles: ['admin'],
+    section: 'Admin'
+  },
+
+  // EDITOR ITEMS
+  {
+    title: 'Editor Dashboard',
+    href: '/dashboard/editor',
+    icon: LayoutDashboard,
+    roles: ['editor'],
+    section: 'Editor'
+  },
+  {
+    title: 'Manage News',
+    href: '/dashboard/editor/news',
+    icon: FileText,
+    roles: ['editor'],
+    section: 'Editor'
+  },
+  {
+    title: 'Review Lyrics',
+    href: '/dashboard/editor/lyrics',
+    icon: Music,
+    roles: ['editor'],
+    section: 'Editor'
+  },
+  {
+    title: 'Featured Content',
+    href: '/dashboard/editor/featured',
+    icon: Star,
+    roles: ['editor'],
+    section: 'Editor'
   },
   {
     title: 'Analytics',
-    href: '/dashboard/analytics',
+    href: '/dashboard/editor/analytics',
     icon: TrendingUp,
-    roles: ['admin', 'artist']
+    roles: ['editor'],
+    section: 'Editor'
+  },
+
+  // ARTIST ITEMS
+  {
+    title: 'Artist Dashboard',
+    href: '/dashboard/artist/dashboard',
+    icon: LayoutDashboard,
+    roles: ['artist'],
+    section: 'Artist'
   },
   {
-    title: 'Promotions',
-    href: '/dashboard/promotions',
-    icon: Star,
-    roles: ['admin', 'artist']
+    title: 'My Songs',
+    href: '/dashboard/artist/songs',
+    icon: Music,
+    roles: ['artist'],
+    section: 'Artist'
   },
   {
-    title: 'Studio Bookings',
-    href: '/dashboard/studio',
-    icon: Mic2,
-    roles: ['admin']
-  },
-  {
-    title: 'Event Coverage',
-    href: '/dashboard/coverage',
-    icon: Video,
-    roles: ['admin']
-  },
-  {
-    title: 'Revenue',
-    href: '/dashboard/revenue',
-    icon: DollarSign,
-    roles: ['admin']
-  },
-  {
-    title: 'Users',
-    href: '/dashboard/users',
+    title: 'My Profile',
+    href: '/dashboard/artist/profile',
     icon: Users,
-    roles: ['admin']
+    roles: ['artist'],
+    section: 'Artist'
   },
+  {
+    title: 'My Events',
+    href: '/dashboard/artist/events',
+    icon: Calendar,
+    roles: ['artist'],
+    section: 'Artist'
+  },
+  {
+    title: 'Analytics',
+    href: '/dashboard/artist/analytics',
+    icon: TrendingUp,
+    roles: ['artist'],
+    section: 'Artist'
+  },
+
+  // CUSTOMER ITEMS
+  {
+    title: 'My Dashboard',
+    href: '/dashboard/customer',
+    icon: LayoutDashboard,
+    roles: ['customer'],
+    section: 'Customer'
+  },
+  {
+    title: 'Wishlist',
+    href: '/dashboard/customer/wishlist',
+    icon: Star,
+    roles: ['customer'],
+    section: 'Customer'
+  },
+  {
+    title: 'Downloads',
+    href: '/dashboard/customer/downloads',
+    icon: Music,
+    roles: ['customer'],
+    section: 'Customer'
+  },
+
+  // COMMON ITEMS
   {
     title: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
-    roles: ['admin', 'artist', 'user']
+    roles: ['admin', 'artist', 'editor', 'customer'],
+    section: 'Account'
   }
 ]
 
